@@ -1,21 +1,17 @@
 package com.lgy.fileupload.service;
 
-import com.lgy.fileupload.conf.FileProperties;
 import com.lgy.fileupload.exection.FileException;
+import com.lgy.fileupload.util.PropertiesUntil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
-import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
 import java.net.MalformedURLException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 
 @Slf4j
 @Service
@@ -24,8 +20,8 @@ public class FileClient {
     private final Path fileStorageLocation; // 文件在本地存储的地址
 
     @Autowired
-    public FileClient(FileProperties fileProperties) {
-        this.fileStorageLocation = Paths.get(fileProperties.getSplitFile()).toAbsolutePath().normalize();
+    public FileClient() {
+        this.fileStorageLocation = Paths.get(PropertiesUntil.SERVER_SPLIT_PATH).toAbsolutePath().normalize();
         try {
             Files.createDirectories(this.fileStorageLocation);
         } catch (Exception ex) {

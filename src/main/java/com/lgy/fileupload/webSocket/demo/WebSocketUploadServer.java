@@ -104,10 +104,10 @@ public class WebSocketUploadServer {
         String data = jsonObject.getString("data");
         FileProtocol myclass = JSONObject.parseObject(data , FileProtocol.class);
         if("1".equals(type)){
-            FileTransferProtocol sendFileTransferProtocol = MsgUtil.createServerProtocol(myclass, TransferType.AGREE,TransferType.CLIENT_SEND);
+            FileTransferProtocol sendFileTransferProtocol = MsgUtil.createServerProtocol(MsgUtil.FileExitByte(myclass), TransferType.AGREE,TransferType.CLIENT_SEND);
             MyClientHandler.x.writeAndFlush(sendFileTransferProtocol);
         }else if ("2".equals(type)){
-            FileTransferProtocol sendFileTransferProtocol = MsgUtil.createServerProtocol(myclass, TransferType.REFUSE,TransferType.CLIENT_SEND);
+            FileTransferProtocol sendFileTransferProtocol = MsgUtil.createServerProtocol(MsgUtil.FileExitByte(myclass), TransferType.REFUSE,TransferType.CLIENT_SEND);
 
             MyClientHandler.x.writeAndFlush(sendFileTransferProtocol);
         }else{
