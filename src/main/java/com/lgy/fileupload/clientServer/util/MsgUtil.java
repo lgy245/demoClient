@@ -22,7 +22,7 @@ public class MsgUtil {
      * @param fileSize 文件大小
      * @return 传输协议
      */
-    public static FileTransferProtocol createClientProtocol(String fileUrl, String preFileName, String fileName, Long fileSize, Integer totalFileIndex, char[] statusArray) {
+    public static FileTransferProtocol createClientProtocol(Integer isSend,String fileUrl, String preFileName, String fileName, Long fileSize, Integer totalFileIndex, char[] statusArray) {
         FileProtocol fileProtocol = new FileProtocol();
         fileProtocol.setFilePath(fileUrl);
         fileProtocol.setPreFileName(preFileName);
@@ -34,7 +34,8 @@ public class MsgUtil {
         FileTransferProtocol fileTransferProtocol = new FileTransferProtocol();
         fileTransferProtocol.setTransferType(TransferType.REQUEST);
         fileTransferProtocol.setTransferObj(fileProtocol);
-        fileTransferProtocol.setIsSend(TransferType.CLIENT_SEND);
+        //fileTransferProtocol.setIsSend(TransferType.CLIENT_SEND);
+        fileTransferProtocol.setIsSend(isSend);
 
 
         return fileTransferProtocol;
@@ -48,10 +49,11 @@ public class MsgUtil {
     * @param fileProtocol
     * @return
     */
-    public static FileTransferProtocol createClientProtocol(FileProtocol fileProtocol, Integer transferType) {
+    public static FileTransferProtocol createClientProtocol(FileProtocol fileProtocol, Integer transferType,Integer isSend) {
         FileTransferProtocol fileTransferProtocol = new FileTransferProtocol();
         fileTransferProtocol.setTransferType(transferType);
         fileTransferProtocol.setTransferObj(fileProtocol);
+        fileTransferProtocol.setIsSend(isSend);
         return fileTransferProtocol;
     }
 
@@ -63,14 +65,21 @@ public class MsgUtil {
     * @param transferType
     * @return
     */
-    public static FileTransferProtocol createServerProtocol(FileProtocol fileProtocol,Integer transferType) {
+    public static FileTransferProtocol createServerProtocol(FileProtocol fileProtocol,Integer transferType,Integer isSend) {
         FileTransferProtocol fileTransferProtocol = new FileTransferProtocol();
         fileTransferProtocol.setTransferType(transferType);
         fileProtocol.setBytes(null);
         fileTransferProtocol.setTransferObj(fileProtocol);
-        fileTransferProtocol.setIsSend(TransferType.CLIENT_DOWN);
+       // fileTransferProtocol.setIsSend(TransferType.CLIENT_DOWN);
+        fileTransferProtocol.setIsSend(isSend);
 
         return fileTransferProtocol;
     }
-
+    /**
+     * 将不存在byte 的对象转发到web端
+     */
+    public static FileProtocol FileExitByte(FileProtocol  fileProtocol){
+        fileProtocol.setBytes(null);
+        return fileProtocol;
+    }
 }

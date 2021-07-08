@@ -27,12 +27,12 @@ public class FileProtocol implements Serializable {
     /**
      * 分片文件的第几片
      */
-    private Integer fileIndex;
+    private int fileIndex;
 
     /**
      * 分片文件总数
      */
-    private Integer totalFileIndex;
+    private int totalFileIndex;
 
     /**
     * 文件名
@@ -42,7 +42,7 @@ public class FileProtocol implements Serializable {
     /**
     * 文件大小
     */
-    private Long fileSize;
+    private long fileSize;
 
     /**
      * 所有分片文件传输状态
@@ -84,9 +84,6 @@ public class FileProtocol implements Serializable {
     * @return
     */
     public boolean isHasNextFileIndex(){
-        if(this.fileIndex == null){
-            this.fileIndex = 0;
-        }
         if(this.fileIndex < this.totalFileIndex){
             return true;
         }

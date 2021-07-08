@@ -15,7 +15,7 @@ public class MyChannelInitializer extends ChannelInitializer<SocketChannel> {
         channel.pipeline().addLast(new ObjDecoder(FileTransferProtocol.class));
         channel.pipeline().addLast(new ObjEncoder(FileTransferProtocol.class));
         // 在管道中添加我们自己的接收数据实现方法
-        channel.pipeline().addLast(new MyServerHandler());
+      //  channel.pipeline().addLast(new MyServerHandler());
     }
 
 }

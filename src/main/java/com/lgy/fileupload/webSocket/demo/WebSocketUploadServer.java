@@ -6,7 +6,6 @@ import com.lgy.fileupload.clientServer.client.MyClientHandler;
 import com.lgy.fileupload.clientServer.domain.FileProtocol;
 import com.lgy.fileupload.clientServer.domain.FileTransferProtocol;
 import com.lgy.fileupload.clientServer.domain.TransferType;
-import com.lgy.fileupload.clientServer.server.MyServerHandler;
 import com.lgy.fileupload.clientServer.util.MsgUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -105,10 +104,10 @@ public class WebSocketUploadServer {
         String data = jsonObject.getString("data");
         FileProtocol myclass = JSONObject.parseObject(data , FileProtocol.class);
         if("1".equals(type)){
-            FileTransferProtocol sendFileTransferProtocol = MsgUtil.createServerProtocol(myclass, TransferType.AGREE);
+            FileTransferProtocol sendFileTransferProtocol = MsgUtil.createServerProtocol(myclass, TransferType.AGREE,TransferType.CLIENT_SEND);
             MyClientHandler.x.writeAndFlush(sendFileTransferProtocol);
         }else if ("2".equals(type)){
-            FileTransferProtocol sendFileTransferProtocol = MsgUtil.createServerProtocol(myclass, TransferType.REFUSE);
+            FileTransferProtocol sendFileTransferProtocol = MsgUtil.createServerProtocol(myclass, TransferType.REFUSE,TransferType.CLIENT_SEND);
 
             MyClientHandler.x.writeAndFlush(sendFileTransferProtocol);
         }else{

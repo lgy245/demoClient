@@ -3,6 +3,7 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.lgy.fileupload.clientServer.client.NettyClient;
 import com.lgy.fileupload.clientServer.domain.FileTransferProtocol;
+import com.lgy.fileupload.clientServer.domain.TransferType;
 import com.lgy.fileupload.clientServer.util.LinkUtil;
 import com.lgy.fileupload.clientServer.util.MsgUtil;
 import com.lgy.fileupload.model.FileModel;
@@ -80,7 +81,7 @@ public class ThreadClass {
                 for(int i = 0;i<transfers.length;i++){
                     transfers[i] = '0';
                 }
-                fileTransferProtocol = MsgUtil.createClientProtocol(PropertiesUntil.SPLIT_PATH, splitFile.getName().split("-")[0], file.getName(), file.length(), fileNames.size(),transfers);
+                fileTransferProtocol = MsgUtil.createClientProtocol(TransferType.CLIENT_DOWN,PropertiesUntil.SPLIT_PATH, splitFile.getName().split("-")[0], file.getName(), file.length(), fileNames.size(),transfers);
                 channelFuture.channel().writeAndFlush(fileTransferProtocol);
 
             } catch (Exception e) {
