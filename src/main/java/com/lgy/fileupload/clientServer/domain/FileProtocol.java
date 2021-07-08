@@ -84,6 +84,9 @@ public class FileProtocol implements Serializable {
     * @return
     */
     public boolean isHasNextFileIndex(){
+        if(this.fileIndex == null){
+            this.fileIndex = 0;
+        }
         if(this.fileIndex < this.totalFileIndex){
             return true;
         }

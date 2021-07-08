@@ -34,7 +34,7 @@ public class MsgUtil {
         FileTransferProtocol fileTransferProtocol = new FileTransferProtocol();
         fileTransferProtocol.setTransferType(TransferType.REQUEST);
         fileTransferProtocol.setTransferObj(fileProtocol);
-        fileTransferProtocol.setIsSend(TransferType.CLIENT_DOWN);
+        fileTransferProtocol.setIsSend(TransferType.CLIENT_SEND);
 
 
         return fileTransferProtocol;

@@ -1,11 +1,10 @@
 package com.lgy.fileupload.clientServer.codec;
 
-import com.lgy.fileupload.clientServer.util.ByteUtil;
+import com.lgy.fileupload.clientServer.domain.Protocol;
 import com.lgy.fileupload.clientServer.util.SerializationUtil;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
-import org.springframework.boot.convert.Delimiter;
 
 import java.util.List;
 
@@ -25,18 +24,26 @@ public class ObjDecoder extends ByteToMessageDecoder {
     }
     @Override
     protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws InterruptedException {
-        System.out.println(in.getByte(0));
-        System.out.println(in);
         // 标记字节流开始位置
-        if(in.getByte(0)!=8&&in.getByte(0)!=7){
-            return;
-        }
         if (in.readableBytes() < 4) {
             return;
+        }  if(in.getByte(0)==99){
+//            in.clear();
+            byte[] data = new byte[in.readableBytes()];
+            in.readBytes(data);
+            // 创建二维码成功
+            out.add(new Protocol());
+            return;
         }
-        byte[] data = new byte[ in.readableBytes()];
+        in.markReaderIndex();
+        byte[] data = new byte[in.readableBytes()];
         in.readBytes(data);
-        out.add(SerializationUtil.deserialize(data, genericClass));
+        Object obj = SerializationUtil.deserialize(data, genericClass);
+        if(obj == null){
+            in.resetReaderIndex();
+            return;
+        }
+        out.add(obj);
     }
 
 }

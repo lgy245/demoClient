@@ -187,8 +187,8 @@ public class CutFileUtil {
 //            e.printStackTrace();
 //        }
         try {
-            String rootPath = "E:\\data\\server\\split\\";
-            new CutFileUtil().merageFile(rootPath, "1625211123976984-4-追溯系统高拍仪系统调整.docx", 26);
+            String rootPath = "E:\\data\\server\\server\\split\\";
+            new CutFileUtil().merageFile(rootPath, "1625644696133344-1-sn明细.xlsx", 6);
         } catch (IOException e) {
             e.printStackTrace();
         }

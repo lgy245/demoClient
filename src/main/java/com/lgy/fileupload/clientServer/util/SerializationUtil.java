@@ -62,8 +62,9 @@ public class SerializationUtil {
             ProtostuffIOUtil.mergeFrom(data, message, schema);
             return message;
         } catch (Exception e) {
-            log.info("deserialize, : {}, : {}", e);
-            throw new IllegalStateException(e.getMessage(), e);
+           // log.info("deserialize, : {}, : {}", e);
+            return null;
+          //  throw new IllegalStateException(e.getMessage(), e);
         }
     }
 

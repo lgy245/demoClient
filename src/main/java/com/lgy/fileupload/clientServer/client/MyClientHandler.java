@@ -9,13 +9,18 @@ import com.lgy.fileupload.clientServer.domain.FileTransferProtocol;
 import com.lgy.fileupload.clientServer.domain.TransferType;
 import com.lgy.fileupload.clientServer.util.FileUtil;
 import com.lgy.fileupload.clientServer.util.MsgUtil;
+import com.lgy.fileupload.clientServer.util.SerializationUtil;
 import com.lgy.fileupload.model.FileModel;
+import com.lgy.fileupload.util.MapUntil;
 import com.lgy.fileupload.util.PropertiesUntil;
 import com.lgy.fileupload.util.RememberFile;
 import com.lgy.fileupload.webSocket.demo.WebSocketUploadServer;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.socket.SocketChannel;
+import io.netty.util.ReferenceCountUtil;
 import lombok.extern.slf4j.Slf4j;
 
 import java.text.SimpleDateFormat;
@@ -39,38 +44,38 @@ public class MyClientHandler extends ChannelInboundHandlerAdapter {
     public static ChannelHandlerContext x;
     public static Object  m ;
     public static String path ="" ;
-    private boolean isQuest=false;
-   // private boolean 1;
-    @Override
-    public void channelActive(ChannelHandlerContext ctx) throws Exception {
-        SocketChannel channel = (SocketChannel) ctx.channel();
-        System.out.println("链接报告开始");
-        System.out.println("链接报告信息：本客户端链接到服务端。channelId：" + channel.id());
-        System.out.println("链接报告IP:" + channel.localAddress().getHostString());
-        System.out.println("链接报告Port:" + channel.localAddress().getPort());
-        System.out.println("链接报告完毕");
-    }
-
-    /**
-     * 当客户端主动断开服务端的链接后，这个通道就是不活跃的。也就是说客户端与服务端的关闭了通信通道并且不可以传输数据
-     */
-    @Override
-    public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-        System.out.println("断开链接" + ctx.channel().localAddress().toString());
-        super.channelInactive(ctx);
-    }
+    public static String filename ="" ;
+    public static FileTransferProtocol fileProtocolWed ;
+    private ByteBuf inCache = Unpooled.buffer();
+    private boolean ok = false;
 
     @Override
-    public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-        x=ctx;
-        m=msg;
+    public void channelReadComplete(ChannelHandlerContext ctx) throws Exception{
+        ctx.flush();
+        if(ok){
+            byte[] data = new byte[inCache.readableBytes()];
+            inCache.readBytes(data);
+
+            Object obj = SerializationUtil.deserialize(data, FileTransferProtocol.class);
+            if(obj != null){
+                this.handleMsg(ctx, obj);
+                x=ctx;
+                m=obj;
+            }
+        }else{
+            ctx.read();
+        }
+    }
+    public void handleMsg(ChannelHandlerContext ctx, Object msg) throws Exception {
+
         //数据格式验证
         if (!(msg instanceof FileTransferProtocol)){
             return;
-        }else{
-            System.err.println(msg);
         }
         FileTransferProtocol fileTransferProtocol = (FileTransferProtocol) msg;
+        if(fileTransferProtocol.getIsSend() == null || fileTransferProtocol.getTransferType() == null ){
+            return;
+        }
         FileProtocol fileProtocol = (FileProtocol) fileTransferProtocol.getTransferObj();
         if(fileTransferProtocol.getIsSend()==8) {
 
@@ -81,7 +86,7 @@ public class MyClientHandler extends ChannelInboundHandlerAdapter {
                     // 待实现
                     // 将拒绝请求转发给web端
                     JSONObject jsonObject = new JSONObject();
-                    jsonObject.put("fileName", fileProtocol.getFileName());
+                    jsonObject.put("file", fileProtocol);
                     jsonObject.put("isAcept", "1");
                     RememberFile rememberFile1 = new RememberFile();
                     String content1 = rememberFile1.getContent(PropertiesUntil.STORY_FILE_PATH);//作为客户端的文件记录路径
@@ -109,12 +114,12 @@ public class MyClientHandler extends ChannelInboundHandlerAdapter {
                     JSONObject jsonTRANSFER = new JSONObject();
                     //待实现
                     // 将当前进度转给web端
-//                    persont = Double.valueOf(fileProtocol.getNextFileIndex() * 1.0 / fileProtocol.getTotalFileIndex() * 1.0) * 100;
-//                    jsonTRANSFER.put("fileName", fileProtocol.getFileName());
-//                    jsonTRANSFER.put("isAcept", "0");
-//                    jsonTRANSFER.put("isSend", "1");
-//                    jsonTRANSFER.put("documentProgress", String.valueOf(Math.round(persont)));
-//                    WebSocketUploadServer.sendInfo(jsonTRANSFER.toJSONString(), "1");
+                    persont = Double.valueOf(fileProtocol.getNextFileIndex() * 1.0 / fileProtocol.getTotalFileIndex() * 1.0) * 100;
+                    jsonTRANSFER.put("file", fileProtocol);
+                    jsonTRANSFER.put("isAcept", "0");
+                    jsonTRANSFER.put("isSend", "1");
+                    jsonTRANSFER.put("documentProgress", String.valueOf(Math.round(persont)));
+                    WebSocketUploadServer.sendInfo(jsonTRANSFER.toJSONString(), "1");
 
                     // 如果传输完成,则继续传下一个分片文件
                     fileProtocol.setFileIndex(fileProtocol.getNextFileIndex());
@@ -133,14 +138,14 @@ public class MyClientHandler extends ChannelInboundHandlerAdapter {
                     // 待实现
                     // 通知web端传输完成
 //                    System.err.println("传输完成1");
-//                    RememberFile rememberFile = new RememberFile();
-//                    String content = rememberFile.getContent(PropertiesUntil.STORY_FILE_PATH);//作为客户端的文件记录路径
-//                    List<FileModel> list = JSONArray.parseArray(content, FileModel.class);
-//                    FileProtocol finalFileProtocol1 = fileProtocol;
-//                    list.stream().filter(s -> s.getFileName().equals(finalFileProtocol1.getFileName())).forEach(s -> s.setDocumentProgress("100"));
-//                    String data = JSON.toJSONString(list);
-//                    // 更新文本数据库
-//                    rememberFile.updateFile(data, PropertiesUntil.STORY_FILE_PATH);
+                    RememberFile rememberFile = new RememberFile();
+                    String content = rememberFile.getContent(PropertiesUntil.STORY_FILE_PATH);//作为客户端的文件记录路径
+                    List<FileModel> list = JSONArray.parseArray(content, FileModel.class);
+                    FileProtocol finalFileProtocol1 = fileProtocol;
+                    list.stream().filter(s -> s.getFileName().equals(finalFileProtocol1.getFileName())).forEach(s -> s.setDocumentProgress("100"));
+                    String data = JSON.toJSONString(list);
+                    // 更新文本数据库
+                    rememberFile.updateFile(data, PropertiesUntil.STORY_FILE_PATH);
                     //
                     //list.add(student);
                     ctx.writeAndFlush(MsgUtil.createClientProtocol(fileProtocol, TransferType.HEART));
@@ -154,21 +159,23 @@ public class MyClientHandler extends ChannelInboundHandlerAdapter {
                     break;
             }
         }else{
+            // 接受 文件请求
             switch (fileTransferProtocol.getTransferType()) {
                 // [客户端]请求传输文件
                 case TransferType.REQUEST:
                     // 待实现
                     // 将请求转发给web端
                     // 将文件名称转发到web端
-                    if(!isQuest) {
+                    if(MapUntil.getData(fileProtocol.getPreFileName(),fileProtocol.getPreFileName())==false){
                         JSONObject json = new JSONObject();
-                        json.put("fileName", fileProtocol.getFileName());
+                        json.put("file", fileProtocol);
                         json.put("isAcept", "0");
                         json.put("isSend", "0");
                         json.put("documentProgress", "0");
                         WebSocketUploadServer.sendInfo(json.toJSONString(), "2");
-                        isQuest = true;
                     }
+
+
                     break;
 
                 // [客户端]传输文件过程中
@@ -187,29 +194,31 @@ public class MyClientHandler extends ChannelInboundHandlerAdapter {
 
                     if(fileProtocol.isFINISH()){
                         ctx.writeAndFlush(MsgUtil.createServerProtocol(fileProtocol, TransferType.FINISH));
-//                        path = new RememberFile().dowondPath(fileProtocol.getFileIndexName(),fileProtocol.getTotalFileIndex());
-//                        Double  persont2 = Double.valueOf(fileProtocol.getNextFileIndex()*1.0/fileProtocol.getTotalFileIndex()*1.0)*100;
-//                        JSONObject jsonT= new JSONObject();
-//                        jsonT.put("fileName",fileProtocol.getFileName());
-//                        jsonT.put("isAcept","0");
-//                        jsonT.put("isSend","0");
-//                        jsonT.put("documentProgress",String.valueOf(persont2));
-//                        jsonT.put("path",path);
-//                        WebSocketUploadServer.sendInfo(jsonT.toJSONString(),"2");
-                    }else{
+                        if(MapUntil.getData(fileProtocol.getFileIndexName(),fileProtocol.getFileIndexName())==false) {
+                            path = new RememberFile().dowondPath(fileProtocol.getFileIndexName(), fileProtocol.getTotalFileIndex());
+                            Double  persont2 = Double.valueOf(fileProtocol.getNextFileIndex()*1.0/fileProtocol.getTotalFileIndex()*1.0)*100;
+                            JSONObject jsonT= new JSONObject();
+                            jsonT.put("file", fileProtocol);
+                            jsonT.put("isAcept","0");
+                            jsonT.put("isSend","0");
+                            jsonT.put("documentProgress",String.valueOf(persont2));
+                            jsonT.put("path",path);
+                            WebSocketUploadServer.sendInfo(jsonT.toJSONString(),"2");
+                        }
 
+                    }else{
+//                        if(MapUntil.getData(fileProtocol.getFileIndexName(),fileProtocol.getFileIndexName())==false) {
                         ctx.writeAndFlush(MsgUtil.createServerProtocol(fileProtocol, TransferType.TRANSFER));
-//                        JSONObject json2 = new JSONObject();
-//                        Double  persont3 = Double.valueOf(fileProtocol.getNextFileIndex()*1.0/fileProtocol.getTotalFileIndex()*1.0)*100;
-//
-//                        json2.put("fileName",fileProtocol.getFileName());
-//                        json2.put("isAcept","0");
-//                        json2.put("isSend","0");
-//                        json2.put("documentProgress",String.valueOf(persont3));
-//                        WebSocketUploadServer.sendInfo(json2.toJSONString(),"2");
+                        JSONObject json2 = new JSONObject();
+                        Double persont3 = Double.valueOf(fileProtocol.getNextFileIndex() * 1.0 / fileProtocol.getTotalFileIndex() * 1.0) * 100;
+                        json2.put("file", fileProtocol);
+                        json2.put("isAcept", "0");
+                        json2.put("isSend", "0");
+                        json2.put("documentProgress", String.valueOf(persont3));
+                        WebSocketUploadServer.sendInfo(json2.toJSONString(), "2");
+//                        }
                     }
                     // 转发进度到web端
-
                     break;
 
                 // [客户端]传输文件完成
@@ -235,6 +244,48 @@ public class MyClientHandler extends ChannelInboundHandlerAdapter {
         ctx.flush();
         ctx.close();
         System.exit(-1);*/
+    }
+
+   // private boolean 1;
+    @Override
+    public void channelActive(ChannelHandlerContext ctx) throws Exception {
+        SocketChannel channel = (SocketChannel) ctx.channel();
+        System.out.println("链接报告开始");
+        System.out.println("链接报告信息：本客户端链接到服务端。channelId：" + channel.id());
+        System.out.println("链接报告IP:" + channel.localAddress().getHostString());
+        System.out.println("链接报告Port:" + channel.localAddress().getPort());
+        System.out.println("链接报告完毕");
+    }
+
+    /**
+     * 当客户端主动断开服务端的链接后，这个通道就是不活跃的。也就是说客户端与服务端的关闭了通信通道并且不可以传输数据
+     */
+    @Override
+    public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+        System.out.println("断开链接" + ctx.channel().localAddress().toString());
+        super.channelInactive(ctx);
+    }
+
+    @Override
+    public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+        if(msg == null){
+            return;
+        }
+
+        ByteBuf in = (ByteBuf)msg;
+//        if(in.getByte(0)==99){
+////            in.clear();
+//            byte[] data = new byte[in.readableBytes()];
+//            in.readBytes(data);
+//            return;
+//        }
+
+        try{
+            inCache.writeBytes(in);
+        }finally {
+            ReferenceCountUtil.release(msg);
+        }
+        ok = true;
     }
 
     /**

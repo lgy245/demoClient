@@ -100,20 +100,15 @@ public class WebSocketUploadServer {
 //        //前端传过来的消息都是一个json
         JSONObject jsonObject = JSON.parseObject(message);
 //        //消息类型
+
         String type = jsonObject.getString("type");
-//        //消息内容
-//        String data = jsonObject.getString("data");
+        String data = jsonObject.getString("data");
+        FileProtocol myclass = JSONObject.parseObject(data , FileProtocol.class);
         if("1".equals(type)){
-            FileTransferProtocol fileTransferProtocol = (FileTransferProtocol) MyClientHandler.m;
-            FileProtocol fileProtocol = (FileProtocol) fileTransferProtocol.getTransferObj();
-
-            FileTransferProtocol sendFileTransferProtocol = MsgUtil.createServerProtocol(fileProtocol, TransferType.AGREE);
-
+            FileTransferProtocol sendFileTransferProtocol = MsgUtil.createServerProtocol(myclass, TransferType.AGREE);
             MyClientHandler.x.writeAndFlush(sendFileTransferProtocol);
         }else if ("2".equals(type)){
-            FileTransferProtocol fileTransferProtocol = (FileTransferProtocol)  MyClientHandler.m;
-            FileProtocol fileProtocol = (FileProtocol) fileTransferProtocol.getTransferObj();
-            FileTransferProtocol sendFileTransferProtocol = MsgUtil.createServerProtocol(fileProtocol, TransferType.REFUSE);
+            FileTransferProtocol sendFileTransferProtocol = MsgUtil.createServerProtocol(myclass, TransferType.REFUSE);
 
             MyClientHandler.x.writeAndFlush(sendFileTransferProtocol);
         }else{

@@ -10,7 +10,7 @@ import io.netty.channel.ChannelHandlerContext;
  * @Time:2021/7/517:02
  */
 public class LinkUtil {
-    public  ChannelFuture channelFuture=null;
+    public static   ChannelFuture channelFuture=null;
     public void con(){
         this.channelFuture = new NettyClient().connect("19.86.11.85", 5230);
 
