@@ -6,6 +6,8 @@ import com.lgy.fileupload.util.PropertiesUntil;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.boot.web.servlet.context.ServletWebServerInitializedEvent;
+import org.springframework.context.event.EventListener;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -36,4 +38,8 @@ public class FileUploadApplication {
 
     }
 
+    @EventListener
+    public void onApplicationEvent(final ServletWebServerInitializedEvent event) {
+        ServerPortService.port = event.getWebServer().getPort();
+    }
 }

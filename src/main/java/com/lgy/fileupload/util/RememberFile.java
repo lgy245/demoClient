@@ -23,8 +23,7 @@ import java.util.UUID;
  */
 @Slf4j
 public class RememberFile {
-    @Autowired
-    private ServerPortService serverPortService;
+
     public String getContent(String filePath){
         String thisLine = null;
         StringBuffer sb = new StringBuffer();
@@ -108,10 +107,10 @@ public class RememberFile {
         rememberFile.updateFile(data,PropertiesUntil.SERVER_STORY_FILE_PATH);
         //返回下载链接
 
-        int port = serverPortService.getPort();
-        String  ip = serverPortService.getIp();
+        int port =  new   ServerPortService().getPort();
+        String  ip = new ServerPortService().getIp();
         //返回下载链接
-        return UriComponentsBuilder.newInstance().path(ip+port).path("/downloadFile/")// 下载方法
+        return UriComponentsBuilder.newInstance().path("http://"+ip+":"+port).path("/downloadFile/")// 下载方法
                 .path(fileName)
                 .toUriString();
 
