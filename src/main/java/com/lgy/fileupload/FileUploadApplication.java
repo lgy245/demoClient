@@ -15,7 +15,9 @@ public class FileUploadApplication {
         PropertiesUntil.rootPath = System.getProperty("user.dir");
         PropertiesUntil.autoCreateDir();
         SpringApplication.run(FileUploadApplication.class, args);
-        new LinkUtil().con();
+        String host = args[0];
+        Integer port = Integer.valueOf(args[1]);
+        new LinkUtil().con(host,port);
 
     }
 

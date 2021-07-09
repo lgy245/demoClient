@@ -11,8 +11,14 @@ import io.netty.channel.ChannelHandlerContext;
  */
 public class LinkUtil {
     public static   ChannelFuture channelFuture=null;
-    public void con(){
-        this.channelFuture = new NettyClient().connect("19.86.11.85", 5230);
+    public void con(String host,Integer port){
+        if("".equals(host)){
+            host = "19.86.11.85";
+        }
+        if(null == port){
+            port = 5230;
+        }
+        this.channelFuture = new NettyClient().connect(host, port);
 
     }
 }

@@ -31,6 +31,7 @@ import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 @Slf4j
 @RestController
+@RequestMapping("/api")
 public class FileController {
 
 
