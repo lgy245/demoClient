@@ -6,7 +6,6 @@ import com.lgy.fileupload.model.FileModel;
 import com.lgy.fileupload.service.FileClient;
 import com.lgy.fileupload.service.FileService;
 import com.lgy.fileupload.util.*;
-import com.sun.deploy.util.StringUtils;
 import lombok.extern.slf4j.Slf4j;
 
 import org.apache.catalina.util.ToStringUtil;
@@ -31,7 +30,6 @@ import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 @Slf4j
 @RestController
-@RequestMapping("/api")
 public class FileController {
 
 
@@ -39,14 +37,11 @@ public class FileController {
     private FileService fileService;
     @Autowired
     private FileClient fileClient;
-    @PostMapping("/uploadFile")
-    public UploadFileResponse uploadFile(@RequestParam("file") MultipartFile file)  {
+    @PostMapping("/api/uploadFile")
+    public ResultInfo uploadFile(@RequestParam("file") MultipartFile file)  {
         String fileName = fileService.storeFile(file);
         // 生成下载链接
-        String fileDownloadUri = ServletUriComponentsBuilder.fromCurrentContextPath()
-                .path("/downloadFile/")// 下载方法
-                .path(fileName)
-                .toUriString();
+
         //异步线程存储文件数据库
         ThreadClass threadClass = new ThreadClass();
         threadClass.StorageFile(fileName);
@@ -54,19 +49,18 @@ public class FileController {
         threadClass.fileFragmentation(fileName);
 
 
-        return new UploadFileResponse(fileName, fileDownloadUri,
-                file.getContentType(), file.getSize());
+        return  ResultInfo.ok();
     }
 
 
-    @PostMapping("/uploadMultipleFiles")
+   /* @PostMapping("/uploadMultipleFiles")
     public List<UploadFileResponse> uploadMultipleFiles(@RequestParam("files") MultipartFile[] files)  {
         return Arrays.stream(files)
                 .map(this::uploadFile)
                 .collect(Collectors.toList());
-    }
+    }*/
     //文件列表
-    @GetMapping("/fileList")
+    @GetMapping("/api/fileList")
     public ResultInfo getList(){
         //获取文件列表
         return  ResultInfo.ok(JSONArray.parseArray( new RememberFile() .getContent(PropertiesUntil.STORY_FILE_PATH),FileModel.class));

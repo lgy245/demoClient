@@ -9,10 +9,11 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>com.lgy</groupId>
-    <artifactId>file-upload</artifactId>
+    <artifactId>demoClient</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>file-upload</name>
+    <name>demoClient</name>
     <description>Demo project for Spring Boot</description>
+    <packaging>jar</packaging>
     <properties>
         <java.version>1.8</java.version>
     </properties>
