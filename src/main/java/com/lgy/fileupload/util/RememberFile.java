@@ -3,7 +3,9 @@ package com.lgy.fileupload.util;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.lgy.fileupload.model.FileModel;
+import com.lgy.fileupload.service.ServerPortService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -21,7 +23,8 @@ import java.util.UUID;
  */
 @Slf4j
 public class RememberFile {
-
+    @Autowired
+    private ServerPortService serverPortService;
     public String getContent(String filePath){
         String thisLine = null;
         StringBuffer sb = new StringBuffer();
@@ -104,11 +107,13 @@ public class RememberFile {
         // 更新文本数据库
         rememberFile.updateFile(data,PropertiesUntil.SERVER_STORY_FILE_PATH);
         //返回下载链接
-        String local = "http://19.86.11.20:8082/downloadFile/";
-        String path =  UriComponentsBuilder.newInstance().path(local)// 下载方法
+
+        int port = serverPortService.getPort();
+        String  ip = serverPortService.getIp();
+        //返回下载链接
+        return UriComponentsBuilder.newInstance().path(ip+port).path("/downloadFile/")// 下载方法
                 .path(fileName)
                 .toUriString();
-        return path ;
 
 
     }

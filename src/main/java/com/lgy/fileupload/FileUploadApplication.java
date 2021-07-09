@@ -1,12 +1,14 @@
 package com.lgy.fileupload;
 
 import com.lgy.fileupload.clientServer.util.LinkUtil;
+import com.lgy.fileupload.service.ServerPortService;
 import com.lgy.fileupload.util.PropertiesUntil;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 
 import java.io.IOException;
+import java.net.InetAddress;
 
 @SpringBootApplication
 public class FileUploadApplication {
@@ -15,8 +17,21 @@ public class FileUploadApplication {
         PropertiesUntil.rootPath = System.getProperty("user.dir");
         PropertiesUntil.autoCreateDir();
         SpringApplication.run(FileUploadApplication.class, args);
-        String host = args[0];
-        Integer port = Integer.valueOf(args[1]);
+
+        String host = null;
+        Integer port = null;
+        if(args.length>0){
+            host = args[0];
+        }
+        if(args.length>1){
+            port = Integer.valueOf(args[1]);
+        }
+        String ip = InetAddress.getLocalHost().getHostAddress();
+        if(args.length>2){
+            ip = args[2];
+        }
+        ServerPortService.ip = ip;
+
         new LinkUtil().con(host,port);
 
     }
