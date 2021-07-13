@@ -116,7 +116,6 @@ public class MyClientHandler extends ChannelInboundHandlerAdapter {
                             WebSocketUploadServer.sendInfo(json.toJSONString(),"2");
                         }
                     }else{
-                        Thread.sleep(0);
                         ctx.writeAndFlush(MsgUtil.createServerProtocol(MsgUtil.FileExitByte(fileProtocol), TransferType.TRANSFER,TransferType.CLIENT_SEND));
                         json.put("file", MsgUtil.FileExitByte(fileProtocol));
                         json.put("fileName",fileProtocol.getFileName());
