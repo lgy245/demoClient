@@ -1,9 +1,12 @@
 package com.lgy.fileupload.clientServer.domain;
 
+import com.lgy.fileupload.util.MapUntil;
+import com.lgy.fileupload.util.PropertiesUntil;
 import lombok.Data;
 import org.apache.commons.lang.ArrayUtils;
 
 import java.io.Serializable;
+import java.util.List;
 
 /**
 * 文件传输协议
@@ -14,11 +17,6 @@ import java.io.Serializable;
 */
 @Data
 public class FileProtocol implements Serializable {
-    /**
-    * 文件路径
-    */
-    private String filePath;
-
     /**
      * 文件名前缀
      */
@@ -39,15 +37,13 @@ public class FileProtocol implements Serializable {
     */
     private String fileName;
 
-    /**
-    * 文件大小
-    */
-    private long fileSize;
+  //  private char[] lossPackage;
+    private List<Integer> lossPackage;
 
     /**
      * 所有分片文件传输状态
      */
-    private char[] statusArray;
+//    private char[] statusArray;
 
     /**
     * 文件内容
@@ -62,7 +58,7 @@ public class FileProtocol implements Serializable {
     * @return
     */
     public String getAbsolutePath(){
-        return this.getFilePath()+this.getPreFileName()+"-"+this.getFileIndex()+"-"+this.getFileName();
+        return PropertiesUntil.SPLIT_PATH+this.getPreFileName()+"-"+this.getFileIndex()+"-"+this.getFileName();
     }
 
     /**
@@ -99,8 +95,12 @@ public class FileProtocol implements Serializable {
     * @return
     */
     public Integer getFristFileIndex(){
-        for(int i = 0 ; i< this.statusArray.length ;i++){
-            if(this.statusArray[i] == '0'){
+        char[] statusArray = MapUntil.getStatusArray(this.fileName,this.totalFileIndex);
+        if(statusArray == null){
+            return 1;
+        }
+        for(int i = 0 ; i< statusArray.length ;i++){
+            if(statusArray[i] == '0'){
                 return i+1;
             }
         }
@@ -117,12 +117,7 @@ public class FileProtocol implements Serializable {
     */
     public Integer getNextFileIndex(){
         if(this.fileIndex < this.totalFileIndex){
-            if(this.statusArray[this.fileIndex] == '0'){
-                return this.fileIndex+1;
-            }else{
-                this.fileIndex++;
-                return this.getNextFileIndex();
-            }
+            return this.fileIndex+1;
         }
 
         return this.totalFileIndex;
@@ -148,7 +143,8 @@ public class FileProtocol implements Serializable {
     */
     public void setSubFileStatus(){
         if(this.fileIndex <= this.totalFileIndex){
-            this.statusArray[this.fileIndex -1] = '1';
+            MapUntil.setSubFileStatus(this.fileName, this.fileIndex-1, this.totalFileIndex);
+//            this.statusArray[this.fileIndex -1] = '1';
         }
     }
 
@@ -160,7 +156,8 @@ public class FileProtocol implements Serializable {
     * @return
     */
     public boolean checkSubFileIsExists(){
-        if(this.fileIndex <= this.totalFileIndex && this.statusArray[this.fileIndex -1] == '1'){
+        char[] statusArray = MapUntil.getStatusArray(this.fileName,this.totalFileIndex);
+        if(this.fileIndex <= this.totalFileIndex && statusArray[this.fileIndex -1] == '1'){
             return true;
         }
 
@@ -175,6 +172,26 @@ public class FileProtocol implements Serializable {
     * @return
     */
     public boolean isFINISH(){
-        return !ArrayUtils.contains(this.statusArray, '0');
+        char[] statusArray = MapUntil.getStatusArray(this.fileName,this.totalFileIndex);
+        return !ArrayUtils.contains(statusArray, '0');
+    }
+
+    /**
+     * 获取分片文件缓存状态中，状态为1 的数量（传输完成的数量）
+     * @param
+     * @return
+     */
+    public int  getFileStatusNum(){
+      char [] arrays = MapUntil.getStatusArray(this.getFileName(),this.getTotalFileIndex());
+        int count = 0;
+        if (arrays == null || arrays.length == 0) {
+            return count;
+        }
+        for (int i = 0; i < arrays.length; i++) {
+            if(arrays[i] == '1'){
+                count++;
+            }
+        }
+        return count;
     }
 }

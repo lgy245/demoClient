@@ -24,12 +24,12 @@ public class MsgUtil {
      */
     public static FileTransferProtocol createClientProtocol(Integer isSend,String fileUrl, String preFileName, String fileName, Long fileSize, Integer totalFileIndex, char[] statusArray) {
         FileProtocol fileProtocol = new FileProtocol();
-        fileProtocol.setFilePath(fileUrl);
+//        fileProtocol.setFilePath(fileUrl);
         fileProtocol.setPreFileName(preFileName);
         fileProtocol.setFileName(fileName);
-        fileProtocol.setFileSize(fileSize);
+//        fileProtocol.setFileSize(fileSize);
         fileProtocol.setTotalFileIndex(totalFileIndex);
-        fileProtocol.setStatusArray(statusArray);
+//        fileProtocol.setStatusArray(statusArray);
 
         FileTransferProtocol fileTransferProtocol = new FileTransferProtocol();
         fileTransferProtocol.setTransferType(TransferType.REQUEST);

@@ -7,6 +7,7 @@ import com.lgy.fileupload.clientServer.domain.FileProtocol;
 import com.lgy.fileupload.clientServer.domain.FileTransferProtocol;
 import com.lgy.fileupload.clientServer.domain.TransferType;
 import com.lgy.fileupload.clientServer.util.MsgUtil;
+import com.lgy.fileupload.util.MapUntil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -103,6 +104,7 @@ public class WebSocketUploadServer {
         String type = jsonObject.getString("type");
         String data = jsonObject.getString("data");
         FileProtocol myclass = JSONObject.parseObject(data , FileProtocol.class);
+        MapUntil.isHeart = false;
         if("1".equals(type)){
             FileTransferProtocol sendFileTransferProtocol = MsgUtil.createServerProtocol(MsgUtil.FileExitByte(myclass), TransferType.AGREE,TransferType.CLIENT_SEND);
             MyClientHandler.x.writeAndFlush(sendFileTransferProtocol);
@@ -152,7 +154,7 @@ public class WebSocketUploadServer {
      * @param sid     房间号
      */
     public static void sendInfo(String message, @PathParam("sid") String sid) {
-        LOG.info("推送消息到窗口" + sid + "，推送内容:" + message);
+//        LOG.info("推送消息到窗口" + sid + "，推送内容:" + message);
         for (WebSocketUploadServer item : webSocketSet) {
             try {
                 //这里可以设定只推送给这个sid的，为null则全部推送

@@ -40,7 +40,8 @@ public class MyClientHandler extends ChannelInboundHandlerAdapter {
     /**
      * 当客户端主动链接服务端的链接后，这个通道就是活跃的了。也就是客户端与服务端建立了通信通道并且可以传输数据
      */
-    private double persont;
+    private double persontSend = 0.0;
+    private double persont = 0.0;
     public static ChannelHandlerContext x;
     public static Object  m ;
     public static String path ="" ;
@@ -98,62 +99,64 @@ public class MyClientHandler extends ChannelInboundHandlerAdapter {
                     break;
                 // [客户端]传输文件过程中
                 case TransferType.TRANSFER:
+                    MapUntil.isHeart = true;
+                    System.out.println(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date())+"---------------------------------------------[接受传输]"+fileProtocol.getFileIndex());
                     fileProtocol = FileUtil.writeFile(fileProtocol);
-                    //待实现
-                    // 将接收进度转发给web端
-              /*  // 测试代码,假设第10个文件分片丢失
-                if(fileProtocol.getFileIndex()==39){
-                    fileProtocol.getStatusArray()[9] = '0';
-                    fileProtocol.getStatusArray()[14] = '0';
-                    fileProtocol.getStatusArray()[19] = '0';
-                }*/
+                    persontSend =  Double.valueOf(fileProtocol.getFileStatusNum()*1.0/fileProtocol.getTotalFileIndex()*1.0)*100;
                     if(fileProtocol.isFINISH()){
                         ctx.writeAndFlush(MsgUtil.createServerProtocol(MsgUtil.FileExitByte(fileProtocol), TransferType.FINISH,TransferType.CLIENT_SEND));
                         if(MapUntil.getData(fileProtocol.getFileIndexName(),fileProtocol.getFileIndexName())==false) {
-                            path = new RememberFile().dowondPath(MsgUtil.FileExitByte(fileProtocol).getFileIndexName(), fileProtocol.getTotalFileIndex());
-                            Double  persont2 = Double.valueOf(fileProtocol.getNextFileIndex()*1.0/fileProtocol.getTotalFileIndex()*1.0)*100;
+                            path = new RememberFile().dowondPath(MsgUtil.FileExitByte(fileProtocol).getFileIndexName(), MsgUtil.FileExitByte(fileProtocol).getTotalFileIndex());
                             json.put("file", MsgUtil.FileExitByte(fileProtocol));
                             json.put("fileName",fileProtocol.getFileName());
                             json.put("isAcept","0");
                             json.put("isSend","0");
-                            json.put("documentProgress",String.valueOf(persont2));
+                            json.put("documentProgress",String.valueOf(persontSend));
                             json.put("path",path);
                             WebSocketUploadServer.sendInfo(json.toJSONString(),"2");
                         }
-
                     }else{
-//                        if(MapUntil.getData(fileProtocol.getFileIndexName(),fileProtocol.getFileIndexName())==false) {
+                        Thread.sleep(0);
                         ctx.writeAndFlush(MsgUtil.createServerProtocol(MsgUtil.FileExitByte(fileProtocol), TransferType.TRANSFER,TransferType.CLIENT_SEND));
-                        Double persont3 = Double.valueOf(fileProtocol.getNextFileIndex() * 1.0 / fileProtocol.getTotalFileIndex() * 1.0) * 100;
                         json.put("file", MsgUtil.FileExitByte(fileProtocol));
                         json.put("fileName",fileProtocol.getFileName());
                         json.put("isAcept", "0");
                         json.put("isSend", "0");
-                        json.put("documentProgress", String.valueOf(persont3));
+                        json.put("documentProgress", String.valueOf(persontSend));
                         WebSocketUploadServer.sendInfo(json.toJSONString(), "2");
-//                        }
                     }
                     // 转发进度到web端
                     break;
-
                 // [客户端]传输文件完成
                 case TransferType.FINISH:
+                    if(!fileProtocol.isFINISH()){
+                        fileProtocol = FileUtil.writeFile(fileProtocol);
+                    }
+
                     // 判断是否存在未丢失分片
                     if(fileProtocol.isFINISH()){
                         ctx.writeAndFlush(MsgUtil.createServerProtocol(MsgUtil.FileExitByte(fileProtocol), TransferType.FINISH,TransferType.CLIENT_SEND));
                         System.err.println(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()) + " 传输完成。");
                     }else{
+                        // 设置未传分片数组
+                        Thread.sleep(100);
+                        fileProtocol.setLossPackage(MapUntil.getLossPackage(fileProtocol.getFileName(), fileProtocol.getTotalFileIndex()));
+                        System.out.println("---------------------------------------------[接受已完成]"+JSON.toJSONString(fileProtocol.getLossPackage()));
                         // 设置第一个未传分片文件的位置
-                        fileProtocol.setFileIndex(MsgUtil.FileExitByte(fileProtocol).getFristFileIndex());
+//                        fileProtocol.setFileIndex(MsgUtil.FileExitByte(fileProtocol).getFristFileIndex());
                         ctx.writeAndFlush(MsgUtil.createServerProtocol(MsgUtil.FileExitByte(fileProtocol), TransferType.PACKET_LOSS,TransferType.CLIENT_SEND));
                     }
                 case TransferType.HEART:
-                    ctx.writeAndFlush(MsgUtil.createClientProtocol(null, TransferType.HEART,TransferType.CLIENT_SEND));
+                    if(MapUntil.isHeart){
+                        Thread.sleep(1000+(int) (Math.random() * 100));
+                        ctx.writeAndFlush(MsgUtil.createClientProtocol(null, TransferType.HEART,TransferType.CLIENT_SEND));
+                    }
                     break;
                 default:
                     break;
             }
         }else if(fileTransferProtocol.getIsSend() == TransferType.CLIENT_DOWN){
+            // 发送文件
             // 0:请求传输文件, 1:同意传输文件, 2:文件传输'数据'
             switch (fileTransferProtocol.getTransferType()) {
                 // 1.服务器同意传输文件
@@ -164,7 +167,9 @@ public class MyClientHandler extends ChannelInboundHandlerAdapter {
                         json.put("file", MsgUtil.FileExitByte(fileProtocol));
                         json.put("fileName", fileProtocol.getFileName());
                         json.put("isAcept", "1");
+                        //更改文本数据
                         RememberFile rememberFile1 = new RememberFile();
+                        //读取文本记录
                         String content1 = rememberFile1.getContent(PropertiesUntil.STORY_FILE_PATH);//作为客户端的文件记录路径
                         List<FileModel> list1 = JSONArray.parseArray(content1, FileModel.class);
                         FileProtocol finalFileProtocol = fileProtocol;
@@ -172,10 +177,10 @@ public class MyClientHandler extends ChannelInboundHandlerAdapter {
                         String data1 = JSON.toJSONString(list1);
                         // 更新文本数据库
                         rememberFile1.updateFile(data1, PropertiesUntil.STORY_FILE_PATH);
+                        // 将拒绝请求转发给web端
                         WebSocketUploadServer.sendInfo(json.toJSONString(), "2");
                     }
                     break;
-
                 // 1.服务器同意传输文件
                 case TransferType.AGREE:
                     // 待实现
@@ -188,22 +193,37 @@ public class MyClientHandler extends ChannelInboundHandlerAdapter {
                     break;
                 // 2.客户端继续传输文件
                 case TransferType.TRANSFER:
+                case TransferType.PACKET_LOSS:
                     //待实现
                     // 将当前进度转给web端
-                    persont = Double.valueOf(fileProtocol.getNextFileIndex() * 1.0 / fileProtocol.getTotalFileIndex() * 1.0) * 100;
+                    persont = 0.0;
                     json.put("file",MsgUtil.FileExitByte(fileProtocol));
                     json.put("fileName",fileProtocol.getFileName());
                     json.put("isAcept", "0");
                     json.put("isSend", "1");
                     json.put("documentProgress", String.valueOf(Math.round(persont)));
                     WebSocketUploadServer.sendInfo(json.toJSONString(), "2");
-                    // 如果传输完成,则继续传下一个分片文件
-                    fileProtocol.setFileIndex(fileProtocol.getNextFileIndex());
-                    FileUtil.readFile(fileProtocol);
-                    if (fileProtocol.isFINISH() || !fileProtocol.isHasNextFileIndex()) {
+                    Integer nextFileIndex = 0;
+                    if(fileTransferProtocol.getTransferType().intValue() == TransferType.TRANSFER){
+                        nextFileIndex = MapUntil.getSendFileNextIndex(fileProtocol.getFileName());
+                    }else{
+                        nextFileIndex = MapUntil.getSendFileNextIndexLoss(fileProtocol.getFileName(),fileProtocol.getLossPackage());
+                        fileProtocol.setLossPackage(null);
+                        if(nextFileIndex == null){
+                            nextFileIndex = fileProtocol.getTotalFileIndex()+1;
+                        }
+                    }
+                    if (nextFileIndex>fileProtocol.getTotalFileIndex()) {
                         // 如果传输完成
-                        ctx.writeAndFlush(MsgUtil.createClientProtocol(MsgUtil.FileExitByte(fileProtocol), TransferType.FINISH,TransferType.CLIENT_DOWN));
-                    } else {
+                        Thread.sleep(200);
+                        System.out.println("---------------------------------------------"+"[已完成]"+nextFileIndex);
+                        ctx.writeAndFlush(MsgUtil.createClientProtocol(fileProtocol, TransferType.FINISH,TransferType.CLIENT_DOWN));
+                     }else {
+                        // 如果传输完成,则继续传下一个分片文件
+                        fileProtocol.setFileIndex(nextFileIndex);
+                        FileUtil.readFile(fileProtocol);
+                        Thread.sleep(200);
+                        System.out.println("---------------------------------------------"+"[传输中]"+nextFileIndex);
                         ctx.writeAndFlush(MsgUtil.createClientProtocol(fileProtocol, TransferType.TRANSFER,TransferType.CLIENT_DOWN));
                     }
                     break;
@@ -211,30 +231,26 @@ public class MyClientHandler extends ChannelInboundHandlerAdapter {
                 case TransferType.FINISH:
                     // 待实现
                     // 通知web端传输完成
-//                    System.err.println("传输完成1");
-                    RememberFile rememberFile = new RememberFile();
-                    String content = rememberFile.getContent(PropertiesUntil.STORY_FILE_PATH);//作为客户端的文件记录路径
-                    List<FileModel> list = JSONArray.parseArray(content, FileModel.class);
-                    FileProtocol finalFileProtocol1 = fileProtocol;
-                    list.stream().filter(s -> s.getFileName().equals(finalFileProtocol1.getFileName())).forEach(s -> s.setDocumentProgress("100"));
-                    String data = JSON.toJSONString(list);
-                    // 更新文本数据库
-                    rememberFile.updateFile(data, PropertiesUntil.STORY_FILE_PATH);
-                    //
-                    //list.add(student);
-                    ctx.writeAndFlush(MsgUtil.createClientProtocol(null, TransferType.HEART,TransferType.CLIENT_DOWN));
-                    break;
-                case TransferType.PACKET_LOSS:
-                    FileUtil.readFile(fileProtocol);
-                    ctx.writeAndFlush(MsgUtil.createClientProtocol(fileProtocol, TransferType.TRANSFER,TransferType.CLIENT_DOWN));
-                    System.out.println(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()) + " 客户端传输文件信息。 FILE：" + fileProtocol.getAbsolutePath());
+                    // 待实现
+                    // 通知web端传输完成
+                    if(MapUntil.getData(fileProtocol.getPreFileName(),fileProtocol.getPreFileName())==false) {
+                        RememberFile rememberFile = new RememberFile();
+                        String content = rememberFile.getContent(PropertiesUntil.STORY_FILE_PATH);//作为客户端的文件记录路径
+                        List<FileModel> list = JSONArray.parseArray(content, FileModel.class);
+                        FileProtocol finalFileProtocol1 = fileProtocol;
+                        list.stream().filter(s -> s.getFileName().equals(finalFileProtocol1.getFileName())).forEach(s -> s.setDocumentProgress("100"));
+                        String data = JSON.toJSONString(list);
+                        //更新文本数据库
+                        rememberFile.updateFile(data, PropertiesUntil.STORY_FILE_PATH);
+                        //list.add(student);
+                    }
+                    ctx.writeAndFlush(MsgUtil.createClientProtocol(fileProtocol, TransferType.HEART,TransferType.CLIENT_DOWN));
                     break;
                 default:
                     break;
             }
 
         }
-
         /**模拟传输过程中断，场景测试可以注释掉
          */
        /* System.out.println(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()) + " 客户端传输文件信息[主动断开链接，模拟断点续传]");
