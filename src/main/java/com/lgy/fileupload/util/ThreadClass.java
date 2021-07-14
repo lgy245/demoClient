@@ -46,7 +46,7 @@ public class ThreadClass {
                 }
                 //转换成list<fileModel>
                 FileModel fileModel = new FileModel();
-                fileModel.setId((UUID.randomUUID().toString()).replace("-", ""));// 唯一编码
+                fileModel.setId(fileId);// 唯一编码
                 fileModel.setFileName(fileName);
                 fileModel.setDocumentProgress("0");
                 fileModel.setIsAcept(0);
