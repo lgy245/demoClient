@@ -12,7 +12,7 @@ import io.netty.channel.ChannelHandlerContext;
 public class LinkUtil {
     public static   ChannelFuture channelFuture=null;
     public void con(String host,Integer port){
-        if("".equals(host)){
+        if(host==null&&host.length()==0){
             host = "19.86.11.85";
         }
         if(null == port){
