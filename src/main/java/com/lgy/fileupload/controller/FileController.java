@@ -21,10 +21,8 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.UUID;
+import java.text.SimpleDateFormat;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
@@ -42,12 +40,12 @@ public class FileController {
         String fileName = fileService.storeFile(file);
         // 生成下载链接
 
-        //异步线程存储文件数据库
+        SimpleDateFormat df = new SimpleDateFormat("yyyyMMddHHmmss");//设置日期格式
         ThreadClass threadClass = new ThreadClass();
-        threadClass.StorageFile(fileName);
+        String fileId =  df.format(new Date());
+        threadClass.StorageFile(fileName,fileId);
         // 线程2 进行文件分片传输
-        threadClass.fileFragmentation(fileName);
-
+        threadClass.fileFragmentation(fileName,fileId);
 
         return  ResultInfo.ok();
     }

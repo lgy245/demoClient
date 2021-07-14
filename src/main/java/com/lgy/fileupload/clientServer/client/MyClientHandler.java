@@ -91,6 +91,7 @@ public class MyClientHandler extends ChannelInboundHandlerAdapter {
                     if(MapUntil.getData(fileProtocol.getPreFileName(),fileProtocol.getPreFileName())==false){
                         json.put("file", MsgUtil.FileExitByte(fileProtocol));
                         json.put("fileName",fileProtocol.getFileName());
+                        json.put("fileId",fileProtocol.getFileId());
                         json.put("isAcept", "0");
                         json.put("isSend", "0");
                         json.put("documentProgress", "0");
@@ -106,9 +107,10 @@ public class MyClientHandler extends ChannelInboundHandlerAdapter {
                     if(fileProtocol.isFINISH()){
                         ctx.writeAndFlush(MsgUtil.createServerProtocol(MsgUtil.FileExitByte(fileProtocol), TransferType.FINISH,TransferType.CLIENT_SEND));
                         if(MapUntil.getData(fileProtocol.getFileIndexName(),fileProtocol.getFileIndexName())==false) {
-                            path = new RememberFile().dowondPath(MsgUtil.FileExitByte(fileProtocol).getFileIndexName(), MsgUtil.FileExitByte(fileProtocol).getTotalFileIndex());
+                            path = new RememberFile().dowondPath(MsgUtil.FileExitByte(fileProtocol).getFileIndexName(), MsgUtil.FileExitByte(fileProtocol).getTotalFileIndex(),fileProtocol.getFileId());
                             json.put("file", MsgUtil.FileExitByte(fileProtocol));
                             json.put("fileName",fileProtocol.getFileName());
+                            json.put("fileId",fileProtocol.getFileId());
                             json.put("isAcept","0");
                             json.put("isSend","0");
                             json.put("documentProgress",String.valueOf(persontSend));
@@ -119,6 +121,7 @@ public class MyClientHandler extends ChannelInboundHandlerAdapter {
                         ctx.writeAndFlush(MsgUtil.createServerProtocol(MsgUtil.FileExitByte(fileProtocol), TransferType.TRANSFER,TransferType.CLIENT_SEND));
                         json.put("file", MsgUtil.FileExitByte(fileProtocol));
                         json.put("fileName",fileProtocol.getFileName());
+                        json.put("fileId",fileProtocol.getFileId());
                         json.put("isAcept", "0");
                         json.put("isSend", "0");
                         json.put("documentProgress", String.valueOf(persontSend));
@@ -139,7 +142,7 @@ public class MyClientHandler extends ChannelInboundHandlerAdapter {
                     }else{
                         // 设置未传分片数组
                         Thread.sleep(100);
-                        fileProtocol.setLossPackage(MapUntil.getLossPackage(fileProtocol.getFileName(), fileProtocol.getTotalFileIndex()));
+                        fileProtocol.setLossPackage(MapUntil.getLossPackage(fileProtocol.getFileId(), fileProtocol.getTotalFileIndex()));
                         System.out.println("---------------------------------------------[接受已完成]"+JSON.toJSONString(fileProtocol.getLossPackage()));
                         // 设置第一个未传分片文件的位置
 //                        fileProtocol.setFileIndex(MsgUtil.FileExitByte(fileProtocol).getFristFileIndex());
@@ -165,6 +168,7 @@ public class MyClientHandler extends ChannelInboundHandlerAdapter {
                     if(MapUntil.getData(fileProtocol.getPreFileName(),fileProtocol.getPreFileName())==false) {
                         json.put("file", MsgUtil.FileExitByte(fileProtocol));
                         json.put("fileName", fileProtocol.getFileName());
+                        json.put("fileId",fileProtocol.getFileId());
                         json.put("isAcept", "1");
                         //更改文本数据
                         RememberFile rememberFile1 = new RememberFile();
@@ -172,7 +176,7 @@ public class MyClientHandler extends ChannelInboundHandlerAdapter {
                         String content1 = rememberFile1.getContent(PropertiesUntil.STORY_FILE_PATH);//作为客户端的文件记录路径
                         List<FileModel> list1 = JSONArray.parseArray(content1, FileModel.class);
                         FileProtocol finalFileProtocol = fileProtocol;
-                        list1.stream().filter(s -> s.getFileName().equals(finalFileProtocol.getFileName())).forEach(s -> s.setIsAcept(1));
+                        list1.stream().filter(s -> s.getId().equals(finalFileProtocol.getFileId())).forEach(s -> s.setIsAcept(1));
                         String data1 = JSON.toJSONString(list1);
                         // 更新文本数据库
                         rememberFile1.updateFile(data1, PropertiesUntil.STORY_FILE_PATH);
@@ -198,15 +202,16 @@ public class MyClientHandler extends ChannelInboundHandlerAdapter {
                     persont = 0.0;
                     json.put("file",MsgUtil.FileExitByte(fileProtocol));
                     json.put("fileName",fileProtocol.getFileName());
+                    json.put("fileId",fileProtocol.getFileId());
                     json.put("isAcept", "0");
                     json.put("isSend", "1");
                     json.put("documentProgress", String.valueOf(Math.round(persont)));
                     WebSocketUploadServer.sendInfo(json.toJSONString(), "2");
                     Integer nextFileIndex = 0;
                     if(fileTransferProtocol.getTransferType().intValue() == TransferType.TRANSFER){
-                        nextFileIndex = MapUntil.getSendFileNextIndex(fileProtocol.getFileName());
+                        nextFileIndex = MapUntil.getSendFileNextIndex(fileProtocol.getFileId());
                     }else{
-                        nextFileIndex = MapUntil.getSendFileNextIndexLoss(fileProtocol.getFileName(),fileProtocol.getLossPackage());
+                        nextFileIndex = MapUntil.getSendFileNextIndexLoss(fileProtocol.getFileId(),fileProtocol.getLossPackage());
                         fileProtocol.setLossPackage(null);
                         if(nextFileIndex == null){
                             nextFileIndex = fileProtocol.getTotalFileIndex()+1;
@@ -237,7 +242,7 @@ public class MyClientHandler extends ChannelInboundHandlerAdapter {
                         String content = rememberFile.getContent(PropertiesUntil.STORY_FILE_PATH);//作为客户端的文件记录路径
                         List<FileModel> list = JSONArray.parseArray(content, FileModel.class);
                         FileProtocol finalFileProtocol1 = fileProtocol;
-                        list.stream().filter(s -> s.getFileName().equals(finalFileProtocol1.getFileName())).forEach(s -> s.setDocumentProgress("100"));
+                        list.stream().filter(s -> s.getId().equals(finalFileProtocol1.getFileId())).forEach(s -> s.setDocumentProgress("100"));
                         String data = JSON.toJSONString(list);
                         //更新文本数据库
                         rememberFile.updateFile(data, PropertiesUntil.STORY_FILE_PATH);

@@ -28,7 +28,7 @@ public class ThreadClass {
     //不推荐使用Executor创建线程池（可能会引发oom），此处只是演示,推荐根据实际场景用原生ThreadPoolExecutor创建。
     ExecutorService executor = Executors.newCachedThreadPool();
     ExecutorService executor2 = Executors.newCachedThreadPool();
-    public  void StorageFile(String fileName){
+    public  void StorageFile(String fileName,String fileId){
         executor.submit(()->{
             System.out.println("正在存储数据，请稍等");
             try {
@@ -60,7 +60,7 @@ public class ThreadClass {
             System.out.println("业务执行完成1");
         });
     }
-    public  void fileFragmentation(String fileName){
+    public  void fileFragmentation(String fileName,String fileId){
         executor2.submit(()->{
             System.out.println("正在进行分片传输，请稍等");
             try {
@@ -81,7 +81,7 @@ public class ThreadClass {
                 for(int i = 0;i<transfers.length;i++){
                     transfers[i] = '0';
                 }
-                fileTransferProtocol = MsgUtil.createClientProtocol(TransferType.CLIENT_DOWN,PropertiesUntil.SPLIT_PATH, splitFile.getName().split("-")[0], file.getName(), file.length(), fileNames.size(),transfers);
+                fileTransferProtocol = MsgUtil.createClientProtocol(TransferType.CLIENT_DOWN,PropertiesUntil.SPLIT_PATH, splitFile.getName().split("-")[0], file.getName(), file.length(), fileNames.size(),transfers,fileId);
                 channelFuture.channel().writeAndFlush(fileTransferProtocol);
 
             } catch (Exception e) {

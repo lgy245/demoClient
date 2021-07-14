@@ -21,6 +21,10 @@ public class FileProtocol implements Serializable {
      * 文件名前缀
      */
     private String preFileName;
+    /**
+     * 文件id
+     */
+    private String fileId;
 
     /**
      * 分片文件的第几片
@@ -95,7 +99,7 @@ public class FileProtocol implements Serializable {
     * @return
     */
     public Integer getFristFileIndex(){
-        char[] statusArray = MapUntil.getStatusArray(this.fileName,this.totalFileIndex);
+        char[] statusArray = MapUntil.getStatusArray(this.fileId,this.totalFileIndex);
         if(statusArray == null){
             return 1;
         }
@@ -143,7 +147,7 @@ public class FileProtocol implements Serializable {
     */
     public void setSubFileStatus(){
         if(this.fileIndex <= this.totalFileIndex){
-            MapUntil.setSubFileStatus(this.fileName, this.fileIndex-1, this.totalFileIndex);
+            MapUntil.setSubFileStatus(this.fileId, this.fileIndex-1, this.totalFileIndex);
 //            this.statusArray[this.fileIndex -1] = '1';
         }
     }
@@ -156,7 +160,7 @@ public class FileProtocol implements Serializable {
     * @return
     */
     public boolean checkSubFileIsExists(){
-        char[] statusArray = MapUntil.getStatusArray(this.fileName,this.totalFileIndex);
+        char[] statusArray = MapUntil.getStatusArray(this.fileId,this.totalFileIndex);
         if(this.fileIndex <= this.totalFileIndex && statusArray[this.fileIndex -1] == '1'){
             return true;
         }
@@ -172,7 +176,7 @@ public class FileProtocol implements Serializable {
     * @return
     */
     public boolean isFINISH(){
-        char[] statusArray = MapUntil.getStatusArray(this.fileName,this.totalFileIndex);
+        char[] statusArray = MapUntil.getStatusArray(this.fileId,this.totalFileIndex);
         return !ArrayUtils.contains(statusArray, '0');
     }
 
@@ -182,7 +186,7 @@ public class FileProtocol implements Serializable {
      * @return
      */
     public int  getFileStatusNum(){
-      char [] arrays = MapUntil.getStatusArray(this.getFileName(),this.getTotalFileIndex());
+      char [] arrays = MapUntil.getStatusArray(this.fileId,this.totalFileIndex);
         int count = 0;
         if (arrays == null || arrays.length == 0) {
             return count;

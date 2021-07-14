@@ -79,7 +79,7 @@ public class RememberFile {
     }*/
 
     //合并文件，写入传输列表，返回下载链接
-    public String dowondPath(String fileNames,int size) throws IOException {
+    public String dowondPath(String fileNames,int size,String fileId) throws IOException {
         String fileName = new CutFileUtil().merageFile(PropertiesUntil.SERVER_SPLIT_PATH,fileNames,size);
         log.info("fileName"+fileName);
         // 写入传输列表
@@ -97,7 +97,7 @@ public class RememberFile {
         }
         //转换成list<fileModel>
         FileModel fileModel = new FileModel();
-        fileModel.setId((UUID.randomUUID().toString()).replace("-", ""));// 唯一编码
+        fileModel.setId(fileId);// 唯一编码
         fileModel.setFileName(fileName);
         fileModel.setDocumentProgress("0");
         fileModel.setIsAcept(0);

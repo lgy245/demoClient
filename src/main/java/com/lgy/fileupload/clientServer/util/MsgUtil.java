@@ -22,10 +22,11 @@ public class MsgUtil {
      * @param fileSize 文件大小
      * @return 传输协议
      */
-    public static FileTransferProtocol createClientProtocol(Integer isSend,String fileUrl, String preFileName, String fileName, Long fileSize, Integer totalFileIndex, char[] statusArray) {
+    public static FileTransferProtocol createClientProtocol(Integer isSend,String fileUrl, String preFileName, String fileName, Long fileSize, Integer totalFileIndex, char[] statusArray,String fileId) {
         FileProtocol fileProtocol = new FileProtocol();
 //        fileProtocol.setFilePath(fileUrl);
         fileProtocol.setPreFileName(preFileName);
+        fileProtocol.setFileId(fileId);
         fileProtocol.setFileName(fileName);
 //        fileProtocol.setFileSize(fileSize);
         fileProtocol.setTotalFileIndex(totalFileIndex);
