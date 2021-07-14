@@ -11,14 +11,17 @@ import io.netty.channel.ChannelHandlerContext;
  */
 public class LinkUtil {
     public static   ChannelFuture channelFuture=null;
-    public void con(String host,Integer port){
+    public static   String host;
+    public static   Integer port;
+    public static   boolean start = true;
+    public void con(String host,Integer port) throws InterruptedException {
         if(host==null&&host.length()==0){
             host = "19.86.11.85";
         }
         if(null == port){
             port = 5230;
         }
-        this.channelFuture = new NettyClient().connect(host, port);
+         new NettyClient().connect(host, port);
 
     }
 }

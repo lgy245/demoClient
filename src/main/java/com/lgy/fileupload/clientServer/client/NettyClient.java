@@ -1,5 +1,6 @@
 package com.lgy.fileupload.clientServer.client;
 
+import com.lgy.fileupload.clientServer.util.LinkUtil;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
@@ -14,8 +15,10 @@ public class NettyClient {
     private EventLoopGroup workerGroup = new NioEventLoopGroup();
     private Channel channel;
 
-    public ChannelFuture connect(String inetHost, int inetPort) {
+    public ChannelFuture connect(String inetHost, int inetPort) throws InterruptedException {
         ChannelFuture channelFuture = null;
+        LinkUtil.host = inetHost;
+        LinkUtil.port = inetPort;
         try {
             Bootstrap b = new Bootstrap();
             b.group(workerGroup);
@@ -24,13 +27,21 @@ public class NettyClient {
             b.handler(new MyChannelInitializer());
             channelFuture = b.connect(inetHost, inetPort).syncUninterruptibly();
             this.channel = channelFuture.channel();
+            LinkUtil.channelFuture = channelFuture;
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
             if (null != channelFuture && channelFuture.isSuccess()) {
                 System.out.println("filetransfer-netty client start sucess.");
+                LinkUtil.start = true;
             } else {
                 System.out.println("filetransfer-netty client start error.");
+                LinkUtil.start = false;
+                while(!LinkUtil.start){
+                    Thread.sleep(3000);
+                    System.err.println("重启中");
+                    this.connect(LinkUtil.host,LinkUtil.port);
+                }
             }
         }
         return channelFuture;

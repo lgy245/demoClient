@@ -61,10 +61,8 @@ public class ThreadClass {
         });
     }
     public  void fileFragmentation(String fileName,String fileId){
-        executor2.submit(()->{
             System.out.println("正在进行分片传输，请稍等");
             try {
-
                 // 拼接地址
                 String path = PropertiesUntil.SERVER_STORY+fileName;//作为客户端存储文件路径
                 System.out.println(path+"分片储存的拼接地址");
@@ -72,7 +70,7 @@ public class ThreadClass {
                 List<String> fileNames = new CutFileUtil().splitFile(path);
                 System.out.println(fileNames.size());
                 // 启动客户端
-                ChannelFuture channelFuture = new LinkUtil().channelFuture;
+                ChannelFuture channelFuture = LinkUtil.channelFuture;
                 FileTransferProtocol fileTransferProtocol = null;
                 // 文件信息
                 File file = new File(path);
@@ -88,7 +86,7 @@ public class ThreadClass {
                 e.printStackTrace();
             }
             System.out.println("业务执行完成2");
-        });
+
     }
 
 

@@ -8,6 +8,7 @@ import com.lgy.fileupload.clientServer.domain.FileProtocol;
 import com.lgy.fileupload.clientServer.domain.FileTransferProtocol;
 import com.lgy.fileupload.clientServer.domain.TransferType;
 import com.lgy.fileupload.clientServer.util.FileUtil;
+import com.lgy.fileupload.clientServer.util.LinkUtil;
 import com.lgy.fileupload.clientServer.util.MsgUtil;
 import com.lgy.fileupload.clientServer.util.SerializationUtil;
 import com.lgy.fileupload.model.FileModel;
@@ -106,8 +107,8 @@ public class MyClientHandler extends ChannelInboundHandlerAdapter {
                     persontSend =  Double.valueOf(fileProtocol.getFileStatusNum()*1.0/fileProtocol.getTotalFileIndex()*1.0)*100;
                     if(fileProtocol.isFINISH()){
                         ctx.writeAndFlush(MsgUtil.createServerProtocol(MsgUtil.FileExitByte(fileProtocol), TransferType.FINISH,TransferType.CLIENT_SEND));
-                        if(MapUntil.getData(fileProtocol.getFileIndexName(),fileProtocol.getFileIndexName())==false) {
-                            path = new RememberFile().dowondPath(MsgUtil.FileExitByte(fileProtocol).getFileIndexName(), MsgUtil.FileExitByte(fileProtocol).getTotalFileIndex(),fileProtocol.getFileId());
+                        if(MapUntil.getData(fileProtocol.getFileId(),fileProtocol.getFileName())==false) {
+                            path = new RememberFile().dowondPath(fileProtocol.getFileIndexName(), fileProtocol.getTotalFileIndex(),fileProtocol.getFileId());
                             json.put("file", MsgUtil.FileExitByte(fileProtocol));
                             json.put("fileName",fileProtocol.getFileName());
                             json.put("fileId",fileProtocol.getFileId());
@@ -235,9 +236,7 @@ public class MyClientHandler extends ChannelInboundHandlerAdapter {
                 case TransferType.FINISH:
                     // 待实现
                     // 通知web端传输完成
-                    // 待实现
-                    // 通知web端传输完成
-                    if(MapUntil.getData(fileProtocol.getPreFileName(),fileProtocol.getPreFileName())==false) {
+                    if(MapUntil.getData(fileProtocol.getFileId(),fileProtocol.getFileName())==false) {
                         RememberFile rememberFile = new RememberFile();
                         String content = rememberFile.getContent(PropertiesUntil.STORY_FILE_PATH);//作为客户端的文件记录路径
                         List<FileModel> list = JSONArray.parseArray(content, FileModel.class);
@@ -281,6 +280,12 @@ public class MyClientHandler extends ChannelInboundHandlerAdapter {
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
         System.out.println("断开链接" + ctx.channel().localAddress().toString());
         super.channelInactive(ctx);
+        LinkUtil.start = false;
+        while(!LinkUtil.start){
+            Thread.sleep(3000);
+            System.err.println("重启中");
+            new NettyClient().connect(LinkUtil.host,LinkUtil.port);
+        }
     }
 
     @Override
