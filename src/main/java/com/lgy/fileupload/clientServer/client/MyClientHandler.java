@@ -101,6 +101,7 @@ public class MyClientHandler extends ChannelInboundHandlerAdapter {
                     break;
                 // [客户端]传输文件过程中
                 case TransferType.TRANSFER:
+                case TransferType.PACKET_LOSS:
                     MapUntil.isHeart = true;
                     System.out.println(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date())+"---------------------------------------------[接受传输]"+fileProtocol.getFileIndex());
                     fileProtocol = FileUtil.writeFile(fileProtocol);
@@ -119,7 +120,19 @@ public class MyClientHandler extends ChannelInboundHandlerAdapter {
                             WebSocketUploadServer.sendInfo(json.toJSONString(),"2");
                         }
                     }else{
-                        ctx.writeAndFlush(MsgUtil.createServerProtocol(MsgUtil.FileExitByte(fileProtocol), TransferType.TRANSFER,TransferType.CLIENT_SEND));
+                        if(fileTransferProtocol.getTransferType().intValue() != TransferType.PACKET_LOSS){
+                            ctx.writeAndFlush(MsgUtil.createServerProtocol(MsgUtil.FileExitByte(fileProtocol), TransferType.TRANSFER,TransferType.CLIENT_SEND));
+                        }else{
+                            List<Integer> list = MapUntil.getLossPackage(fileProtocol.getFileId(), fileProtocol.getTotalFileIndex());
+                            if(list.size()!=0){
+                                fileProtocol.setLossPackage(list);
+                                ctx.writeAndFlush(MsgUtil.createServerProtocol(MsgUtil.FileExitByte(fileProtocol), TransferType.PACKET_LOSS,TransferType.CLIENT_SEND));
+                            }else {
+                                ctx.writeAndFlush(MsgUtil.createServerProtocol(MsgUtil.FileExitByte(fileProtocol), TransferType.FINISH,TransferType.CLIENT_SEND));
+                                System.err.println(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()) + " 传输完成。");
+                            }
+
+                        }
                         json.put("file", MsgUtil.FileExitByte(fileProtocol));
                         json.put("fileName",fileProtocol.getFileName());
                         json.put("fileId",fileProtocol.getFileId());
@@ -142,11 +155,8 @@ public class MyClientHandler extends ChannelInboundHandlerAdapter {
                         System.err.println(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()) + " 传输完成。");
                     }else{
                         // 设置未传分片数组
-                        Thread.sleep(100);
                         fileProtocol.setLossPackage(MapUntil.getLossPackage(fileProtocol.getFileId(), fileProtocol.getTotalFileIndex()));
                         System.out.println("---------------------------------------------[接受已完成]"+JSON.toJSONString(fileProtocol.getLossPackage()));
-                        // 设置第一个未传分片文件的位置
-//                        fileProtocol.setFileIndex(MsgUtil.FileExitByte(fileProtocol).getFristFileIndex());
                         ctx.writeAndFlush(MsgUtil.createServerProtocol(MsgUtil.FileExitByte(fileProtocol), TransferType.PACKET_LOSS,TransferType.CLIENT_SEND));
                     }
                 case TransferType.HEART:
@@ -219,18 +229,22 @@ public class MyClientHandler extends ChannelInboundHandlerAdapter {
                         }
                     }
                     if (nextFileIndex>fileProtocol.getTotalFileIndex()) {
-                        // 如果传输完成
-                        Thread.sleep(200);
-                        System.out.println("---------------------------------------------"+"[已完成]"+nextFileIndex);
-                        ctx.writeAndFlush(MsgUtil.createClientProtocol(fileProtocol, TransferType.FINISH,TransferType.CLIENT_DOWN));
+                        //放入缓存，让 s2判断是否存在丢包，不存在 主动结束
+                        if(MapUntil.getData((fileProtocol.getFileId())+"1",fileProtocol.getFileName())==false) {
+                            System.out.println("---------------------------------------------"+"[已完成]"+nextFileIndex);
+                            ctx.writeAndFlush(MsgUtil.createClientProtocol(fileProtocol, TransferType.FINISH,TransferType.CLIENT_DOWN));
+                        }
                      }else {
                         // 如果传输完成,则继续传下一个分片文件
                         fileProtocol.setFileIndex(nextFileIndex);
                         FileUtil.readFile(fileProtocol);
-                        Thread.sleep(200);
                         System.out.println("---------------------------------------------"+"[传输中]"+nextFileIndex);
-                        ctx.writeAndFlush(MsgUtil.createClientProtocol(fileProtocol, TransferType.TRANSFER,TransferType.CLIENT_DOWN));
-                    }
+                        if(fileTransferProtocol.getTransferType().intValue() == TransferType.PACKET_LOSS){
+                            fileProtocol.setLossPackage(null);
+                            ctx.writeAndFlush(MsgUtil.createClientProtocol(fileProtocol, TransferType.PACKET_LOSS,TransferType.CLIENT_DOWN));
+                        }else{
+                            ctx.writeAndFlush(MsgUtil.createClientProtocol(fileProtocol, TransferType.TRANSFER,TransferType.CLIENT_DOWN));
+                        }                    }
                     break;
                 // 3.服务器通知文件传输完成
                 case TransferType.FINISH:

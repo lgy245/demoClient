@@ -24,7 +24,7 @@ public class CutFileUtil {
     /**
      * 文件分割大小 4KB
      */
-    private static final Long SPLIT_SIZE = 1024L;
+    private static final Long SPLIT_SIZE = 2048L;
 
     /**
      * 文件分割后存储路径
